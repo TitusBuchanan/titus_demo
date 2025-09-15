@@ -14,6 +14,11 @@ pipeline {
     ansiColor('xterm')
   }
 
+  triggers {
+    // Requires GitHub plugin and a webhook to http(s)://<jenkins-host>/github-webhook/
+    githubPush()
+  }
+
   stages {
     stage('Checkout') {
       steps {

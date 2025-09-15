@@ -122,8 +122,32 @@ This repo includes a `Jenkinsfile` that will:
 ### Setup on Jenkins (simple demo)
 
 1. Ensure Docker is installed on the Jenkins agent and the Jenkins user can run `docker`.
+   - You can run this script as root on the Linux agent:
+     ```bash
+     curl -fsSL https://raw.githubusercontent.com/your-org/your-repo/main/scripts/setup-docker-jenkins.sh -o setup-docker-jenkins.sh
+     sudo bash setup-docker-jenkins.sh
+     ```
+     Or, if running from this repo checkout on the agent:
+     ```bash
+     sudo ./scripts/setup-docker-jenkins.sh
+     ```
 2. Create a Multibranch or Pipeline job pointing at this repo.
 3. Run the job. Once complete, the app should be reachable on the agent's port 3000.
+
+### Auto-build on git push (GitHub)
+
+1. In Jenkins: Manage Jenkins → Configure System → GitHub → Add GitHub Server. Add credentials/token and check “Manage hooks”. Install the “GitHub” and “GitHub Integration” plugins if missing.
+2. In your repo settings on GitHub: Webhooks → Add webhook.
+   - Payload URL: `http://<jenkins-host>:8080/github-webhook/`
+   - Content type: `application/json`
+   - Events: “Just the push event” (or “Let me select individual events” → Push)
+3. Ensure your Jenkins job uses “Pipeline script from SCM” with this repo URL and that the `Jenkinsfile` contains a push trigger (already added):
+   ```groovy
+   triggers {
+     githubPush()
+   }
+   ```
+4. Push to the repository. Jenkins should receive the webhook and start a new build automatically.
 
 > Note: For production, push images to a registry and deploy to a runtime (Kubernetes, ECS, etc.). This demo runs directly on the Jenkins agent for simplicity.
 
