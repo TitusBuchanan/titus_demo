@@ -40,7 +40,7 @@ docker rm -f clock-demo
 # start an existing stopped container
 docker start clock-demo
 
-# view logs
+# View logs
 docker logs -f clock-demo
 
 # list container (any state)
