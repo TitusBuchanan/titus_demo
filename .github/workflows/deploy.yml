@@ -2,7 +2,7 @@ name: Build and Deploy
 
 on:
   push:
-    branches: [ main ]
+    branches: [ main, master ]
 
 permissions:
   contents: read
@@ -46,23 +46,32 @@ jobs:
           labels: ${{ steps.meta.outputs.labels }}
 
   deploy:
-    if: ${{ secrets.DEPLOY_HOST != '' }}
     needs: build-and-push
     runs-on: ubuntu-latest
     env:
       IMAGE_NAME: ghcr.io/${{ github.repository_owner }}/demo-clock-app
+      DEPLOY_HOST: ${{ secrets.DEPLOY_HOST }}
+      DEPLOY_USER: ${{ secrets.DEPLOY_USER }}
+      DEPLOY_SSH_KEY: ${{ secrets.DEPLOY_SSH_KEY }}
+      GHCR_PAT: ${{ secrets.GHCR_PAT }}
     steps:
+      - name: Skip deploy (no deploy secrets set)
+        if: ${{ env.DEPLOY_HOST == '' || env.DEPLOY_USER == '' || env.DEPLOY_SSH_KEY == '' }}
+        run: |
+          echo "No deploy secrets provided; skipping deploy."
+
       - name: Deploy via SSH and run container
+        if: ${{ env.DEPLOY_HOST != '' && env.DEPLOY_USER != '' && env.DEPLOY_SSH_KEY != '' }}
         uses: appleboy/ssh-action@v1.0.3
         with:
-          host: ${{ secrets.DEPLOY_HOST }}
-          username: ${{ secrets.DEPLOY_USER }}
-          key: ${{ secrets.DEPLOY_SSH_KEY }}
+          host: ${{ env.DEPLOY_HOST }}
+          username: ${{ env.DEPLOY_USER }}
+          key: ${{ env.DEPLOY_SSH_KEY }}
           script_stop: true
           script: |
             set -euo pipefail
             echo "Logging into GHCR..."
-            echo "${{ secrets.GHCR_PAT }}" | docker login ghcr.io -u ${{ github.repository_owner }} --password-stdin
+            echo "${GHCR_PAT}" | docker login ghcr.io -u ${{ github.repository_owner }} --password-stdin
             IMAGE="${IMAGE_NAME}:latest"
             echo "Pulling ${IMAGE}..."
             docker pull "$IMAGE"
