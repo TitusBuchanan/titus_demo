@@ -151,6 +151,22 @@ This repo includes a `Jenkinsfile` that will:
 
 > Note: For production, push images to a registry and deploy to a runtime (Kubernetes, ECS, etc.). This demo runs directly on the Jenkins agent for simplicity.
 
+## GitHub Actions (optional CI/CD)
+
+This repo includes `.github/workflows/deploy.yml` which will:
+
+- Build and push the Docker image to GHCR on push to `main`
+- Optionally deploy to a remote host via SSH if secrets are set
+
+### Required secrets (in GitHub repo → Settings → Secrets and variables → Actions)
+
+- `GHCR_PAT` (optional if `GITHUB_TOKEN` lacks permission for your org): A PAT with `write:packages`
+- `DEPLOY_HOST` (optional): SSH hostname or IP of your Docker host
+- `DEPLOY_USER` (optional): SSH username
+- `DEPLOY_SSH_KEY` (optional): Private key for SSH auth
+
+If deploy secrets are not provided, the workflow only builds and pushes the image.
+
 ## Project structure
 
 ```
